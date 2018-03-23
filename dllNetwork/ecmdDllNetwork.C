@@ -17,7 +17,11 @@
  */
 //IBM_PROLOG_END_TAG
 
-
+#ifdef SCOM_VIA_I2C
+#define SLAVE_ADDRESS 72
+#define BITS_PER_WORD 8
+#define ADDRESS_SIZE 1
+#endif
 
 //--------------------------------------------------------------------
 // Includes
@@ -110,6 +114,9 @@ std::string dllSpecificParseReturnCode(uint32_t i_returnCode) { return ""; }
 
 uint32_t dllGetScom(ecmdChipTarget & i_target, uint64_t i_address, ecmdDataBuffer & o_data)
 {
+#ifdef SCOM_VIA_I2C
+    return dllI2cReadOffset(i_target, 0, 1, SLAVE_ADDRESS, ECMD_I2C_BUSSPEED_400KHZ, i_address, ADDRESS_SIZE, BITS_PER_WORD>>3, o_data);
+#else
     uint32_t rc = 0;
     FSIInstruction * scomoutInstruction = new FSIInstruction();
     uint32_t scomlen = 64;
@@ -142,10 +149,14 @@ uint32_t dllGetScom(ecmdChipTarget & i_target, uint64_t i_address, ecmdDataBuffe
     }
 
     return rc;
+#endif
 }
 
 uint32_t dllPutScom(ecmdChipTarget & i_target, uint64_t i_address, ecmdDataBuffer & i_data)
 {
+#ifdef SCOM_VIA_I2C
+    return dllI2cWriteOffset(i_target, 0, 1, SLAVE_ADDRESS, ECMD_I2C_BUSSPEED_400KHZ, i_address, ADDRESS_SIZE, i_data);
+#else
     uint32_t rc = 0;
     FSIInstruction * scominInstruction = new FSIInstruction();
     uint32_t scomlen = 64;
@@ -179,6 +190,7 @@ uint32_t dllPutScom(ecmdChipTarget & i_target, uint64_t i_address, ecmdDataBuffe
     }
 
     return rc;
+#endif
 }
 
 uint32_t dllPutScomUnderMask(ecmdChipTarget & i_target, uint64_t i_address, ecmdDataBuffer & i_data, ecmdDataBuffer & i_mask)
